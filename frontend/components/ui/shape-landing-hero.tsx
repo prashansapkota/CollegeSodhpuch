@@ -75,9 +75,9 @@ function ElegantShape({
 }
 
 function HeroGeometric({
-  badge = "Design Collective",
-  title1 = "Elevate Your Digital Vision",
-  title2 = "Crafting Exceptional Websites",
+  badge = "CollegeSodhpuch",
+  title1 = "Complete Study",
+  title2 = "Abroad Roadmap",
 }: {
   badge?: string;
   title1?: string;
@@ -174,8 +174,7 @@ function HeroGeometric({
 
           <motion.div custom={2} variants={fadeUpVariants} initial="hidden" animate="visible">
             <p className="text-base sm:text-lg md:text-xl text-white/40 mb-8 leading-relaxed font-light tracking-wide max-w-xl mx-auto px-4">
-              Crafting exceptional digital experiences through innovative design and cutting-edge
-              technology.
+            College discovery, application strategy, and visa guidance - everything you need to reach your dream university.
             </p>
           </motion.div>
         </div>
