@@ -31,7 +31,7 @@ export default function LoginPage() {
   return (
     <section className="card">
       <h1>Login</h1>
-      <form onSubmit={handleSubmit}>
+      <form className="auth-form" onSubmit={handleSubmit}>
         <input
           type="email"
           placeholder="Email"

@@ -2,6 +2,7 @@
 
 :root {
   color-scheme: light;
+  --site-header-height: 64px;
 }
 
 * {
@@ -70,6 +71,14 @@ main {
   padding: 2rem 1rem;
 }
 
+.dashboard-fullbleed {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-top: -2rem;
+  margin-bottom: -2rem;
+  min-height: calc(100dvh - var(--site-header-height));
+}
+
 .card {
   background: #ffffff;
   border: 1px solid #d9e0ee;
@@ -77,28 +86,99 @@ main {
   padding: 1rem;
 }
 
-form {
+.dashboard-page {
+  display: grid;
+  gap: 1rem;
+}
+
+.dashboard-hero {
+  border-radius: 12px;
+  border: 1px solid #d9e0ee;
+  background: #ffffff;
+  padding: 1.1rem 1rem;
+}
+
+.dashboard-hero h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.dashboard-hero p {
+  margin: 0.65rem 0 0;
+  color: #43526a;
+  line-height: 1.6;
+}
+
+.dashboard-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.dashboard-card {
+  border-radius: 12px;
+  border: 1px solid #d9e0ee;
+  background: #ffffff;
+  padding: 1.1rem 1rem;
+}
+
+.dashboard-card h2 {
+  margin: 0;
+  font-size: 1.16rem;
+  color: #102038;
+}
+
+.dashboard-card h3 {
+  margin: 1rem 0 0.4rem;
+  font-size: 1rem;
+  color: #1f3554;
+}
+
+.dashboard-card p {
+  margin: 0.6rem 0 0;
+  line-height: 1.65;
+  color: #3f4f66;
+}
+
+.dashboard-more {
+  display: inline-block;
+  margin-top: 0.85rem;
+  color: #1347b9;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.dashboard-more:hover {
+  text-decoration: underline;
+}
+
+@media (min-width: 900px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.auth-form {
   display: grid;
   gap: 0.75rem;
   max-width: 420px;
 }
 
-input,
-button {
+.auth-form input,
+.auth-form button {
   padding: 0.6rem 0.8rem;
   border-radius: 8px;
   border: 1px solid #ccd6ea;
   font-size: 1rem;
 }
 
-button {
+.auth-form button {
   cursor: pointer;
-  background: #0f5bd8;
+  background: #111111;
   color: white;
   border: none;
 }
 
-button:disabled {
+.auth-form button:disabled {
   opacity: 0.65;
   cursor: not-allowed;
 }
