@@ -12,19 +12,19 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <header style={{ borderBottom: "1px solid #d9e0ee", background: "#fff" }}>
-          <nav
-            style={{
-              maxWidth: 900,
-              margin: "0 auto",
-              padding: "1rem",
-              display: "flex",
-              gap: "1rem",
-            }}
-          >
-            <Link href="/">Home</Link>
-            <Link href="/login">Login</Link>
-            <Link href="/dashboard">Dashboard</Link>
+        <header className="site-header">
+          <nav className="site-header__nav" aria-label="Main navigation">
+            <Link className="site-logo" href="/">
+              CollegeSodhpuch
+            </Link>
+            <div className="site-links">
+              <Link className="site-link" href="/">
+                Home
+              </Link>
+              <Link className="site-link" href="/dashboard">
+                Dashboard
+              </Link>
+            </div>
           </nav>
         </header>
         <main>{children}</main>
