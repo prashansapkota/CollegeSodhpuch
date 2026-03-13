@@ -51,21 +51,6 @@ flowchart TD
 
 **Explanation:** This flowchart shows how login is implemented end-to-end. JWT is used for protected route access and session continuity at the frontend level.
 
-### Figure 3. Initial Database Schema (Core)
-
-```mermaid
-erDiagram
-    USERS {
-        int id PK
-        string email UNIQUE
-        string full_name
-        string hashed_password
-        bool is_active
-        datetime created_at
-    }
-```
-
-**Explanation:** The current schema includes the core `users` table required for authentication and dashboard personalization. This schema is intentionally minimal for iterative development.
 
 ### Figure 4. AI Agent Pipeline (Stubbed)
 
