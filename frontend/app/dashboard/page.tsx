@@ -26,6 +26,16 @@ function DashboardLogoIcon() {
 }
 
 function InformationView() {
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({
+    universities: false,
+    sat: false,
+    visa: false,
+  });
+
+  const toggle = (topic: "universities" | "sat" | "visa") => {
+    setExpanded((prev) => ({ ...prev, [topic]: !prev[topic] }));
+  };
+
   return (
     <div className="grid gap-4">
       <article className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
@@ -43,9 +53,61 @@ function InformationView() {
           range. These are not backup schools with low quality. A smart safety list gives you good
           academics, better scholarship probability, and peace of mind when decision season starts.
         </p>
-        <button className="mt-4 rounded-full border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100 dark:border-neutral-600 dark:text-neutral-200 dark:hover:bg-neutral-800">
-          More &gt;
+        <button
+          onClick={() => toggle("universities")}
+          className="mt-4 rounded-full border border-neutral-800 bg-neutral-900 px-4 py-2 text-sm font-medium text-neutral-100 transition hover:bg-black"
+        >
+          {expanded.universities ? "Less ^" : "More >"}
         </button>
+
+        {expanded.universities && (
+          <div className="mt-4 rounded-lg border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-700 dark:bg-neutral-800/60">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-neutral-700 dark:text-neutral-200">
+              How to use this in your shortlist
+            </h3>
+            <ul className="mt-2 list-disc space-y-2 pl-5 text-sm leading-7 text-neutral-600 dark:text-neutral-300">
+              <li>
+                Keep a balanced list: about 20-30% dream, 40-50% match, and 20-30% safety.
+              </li>
+              <li>
+                Validate outcomes with each university&apos;s official admissions pages and cost
+                estimators before finalizing.
+              </li>
+              <li>
+                Prioritize accredited institutions and compare academic fit, scholarship policies,
+                and total cost of attendance.
+              </li>
+            </ul>
+
+            <div className="mt-4 space-y-2 text-sm">
+              <p className="font-medium text-neutral-800 dark:text-neutral-100">Reliable links</p>
+              <a
+                href="https://www.commonapp.org/apply/first-time-students"
+                target="_blank"
+                rel="noreferrer"
+                className="block text-neutral-700 underline underline-offset-4 hover:text-black dark:text-neutral-200 dark:hover:text-white"
+              >
+                Common App: First-year application guide
+              </a>
+              <a
+                href="https://educationusa.state.gov/"
+                target="_blank"
+                rel="noreferrer"
+                className="block text-neutral-700 underline underline-offset-4 hover:text-black dark:text-neutral-200 dark:hover:text-white"
+              >
+                EducationUSA: Official U.S. higher-ed advising network
+              </a>
+              <a
+                href="https://educationusa.state.gov/your-5-steps-us-study"
+                target="_blank"
+                rel="noreferrer"
+                className="block text-neutral-700 underline underline-offset-4 hover:text-black dark:text-neutral-200 dark:hover:text-white"
+              >
+                EducationUSA: Your 5 Steps to U.S. Study
+              </a>
+            </div>
+          </div>
+        )}
       </article>
 
       <article className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
@@ -62,9 +124,136 @@ function InformationView() {
           timed mocks, and retake strategy. If you score well, it can move your application from
           “possible” to “serious.”
         </p>
-        <button className="mt-4 rounded-full border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100 dark:border-neutral-600 dark:text-neutral-200 dark:hover:bg-neutral-800">
-          More &gt;
+        <button
+          onClick={() => toggle("sat")}
+          className="mt-4 rounded-full border border-neutral-800 bg-neutral-900 px-4 py-2 text-sm font-medium text-neutral-100 transition hover:bg-black"
+        >
+          {expanded.sat ? "Less ^" : "More >"}
         </button>
+
+        {expanded.sat && (
+          <div className="mt-4 rounded-lg border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-700 dark:bg-neutral-800/60">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-neutral-700 dark:text-neutral-200">
+              High-impact SAT strategy
+            </h3>
+            <ul className="mt-2 list-disc space-y-2 pl-5 text-sm leading-7 text-neutral-600 dark:text-neutral-300">
+              <li>Start with one full diagnostic test and identify your weakest 2-3 skill areas.</li>
+              <li>
+                Use timed weekly blocks: concepts, drills, and one section-length simulation.
+              </li>
+              <li>
+                Track every missed question by reason (content gap, timing, or careless error) and
+                revise based on the pattern.
+              </li>
+            </ul>
+
+            <div className="mt-4 space-y-2 text-sm">
+              <p className="font-medium text-neutral-800 dark:text-neutral-100">Reliable links</p>
+              <a
+                href="https://satsuite.collegeboard.org/sat/registration"
+                target="_blank"
+                rel="noreferrer"
+                className="block text-neutral-700 underline underline-offset-4 hover:text-black dark:text-neutral-200 dark:hover:text-white"
+              >
+                College Board: SAT registration
+              </a>
+              <a
+                href="https://satsuite.collegeboard.org/scores/sat"
+                target="_blank"
+                rel="noreferrer"
+                className="block text-neutral-700 underline underline-offset-4 hover:text-black dark:text-neutral-200 dark:hover:text-white"
+              >
+                College Board: SAT scores and timelines
+              </a>
+              <a
+                href="https://www.khanacademy.org/test-prep/sat/sat-study-plans/sat-study-plan/a/sat-study-schedule"
+                target="_blank"
+                rel="noreferrer"
+                className="block text-neutral-700 underline underline-offset-4 hover:text-black dark:text-neutral-200 dark:hover:text-white"
+              >
+                Khan Academy: Digital SAT study schedule
+              </a>
+            </div>
+          </div>
+        )}
+      </article>
+
+      <article className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
+        <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+          Visa Application: International Students from Nepal
+        </h2>
+        <p className="mt-3 text-sm leading-7 text-neutral-600 dark:text-neutral-300">
+          After receiving your university admit and funding details, your next critical step is the
+          F-1 student visa process. For Nepali students, success usually comes from preparation:
+          correct documents, clear financial proof, and confident interview answers.
+        </p>
+        <p className="mt-3 text-sm leading-7 text-neutral-600 dark:text-neutral-300">
+          Focus on showing three things clearly: your academic plan in the U.S., your ability to
+          finance your studies, and your intent to return after completing your program.
+        </p>
+        <button
+          onClick={() => toggle("visa")}
+          className="mt-4 rounded-full border border-neutral-800 bg-neutral-900 px-4 py-2 text-sm font-medium text-neutral-100 transition hover:bg-black"
+        >
+          {expanded.visa ? "Less ^" : "More >"}
+        </button>
+
+        {expanded.visa && (
+          <div className="mt-4 rounded-lg border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-700 dark:bg-neutral-800/60">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-neutral-700 dark:text-neutral-200">
+              Recommended visa prep checklist
+            </h3>
+            <ul className="mt-2 list-disc space-y-2 pl-5 text-sm leading-7 text-neutral-600 dark:text-neutral-300">
+              <li>Get your I-20 from the university and verify all details match your passport.</li>
+              <li>Pay SEVIS I-901 fee, then complete the DS-160 accurately.</li>
+              <li>Book your visa appointment at the U.S. Embassy in Kathmandu.</li>
+              <li>
+                Prepare finances: sponsor letters, bank statements, income proofs, and funding
+                source consistency.
+              </li>
+              <li>
+                Practice interview responses on study plan, university choice, finances, and
+                post-study intent.
+              </li>
+            </ul>
+
+            <div className="mt-4 space-y-2 text-sm">
+              <p className="font-medium text-neutral-800 dark:text-neutral-100">Reliable links</p>
+              <a
+                href="https://travel.state.gov/content/travel/en/us-visas/study/student-visa.html"
+                target="_blank"
+                rel="noreferrer"
+                className="block text-neutral-700 underline underline-offset-4 hover:text-black dark:text-neutral-200 dark:hover:text-white"
+              >
+                U.S. Department of State: Student Visa (F-1)
+              </a>
+              <a
+                href="https://www.fmjfee.com/"
+                target="_blank"
+                rel="noreferrer"
+                className="block text-neutral-700 underline underline-offset-4 hover:text-black dark:text-neutral-200 dark:hover:text-white"
+              >
+                SEVIS I-901 Fee Payment Portal
+              </a>
+              <a
+                href="https://ceac.state.gov/CEAC/"
+                target="_blank"
+                rel="noreferrer"
+                className="block text-neutral-700 underline underline-offset-4 hover:text-black dark:text-neutral-200 dark:hover:text-white"
+              >
+                DS-160 Application (CEAC)
+              </a>
+              <a
+                href="https://np.usembassy.gov/visas/"
+                target="_blank"
+                rel="noreferrer"
+                className="block text-neutral-700 underline underline-offset-4 hover:text-black dark:text-neutral-200 dark:hover:text-white"
+              >
+                U.S. Embassy in Nepal: Visa Information
+              </a>
+            </div>
+          </div>
+        )}
       </article>
     </div>
   );
