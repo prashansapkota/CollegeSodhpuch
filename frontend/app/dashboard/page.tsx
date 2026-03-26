@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ChatInput } from "@/components/ui/chat-input";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
+import { sendChatMessage } from "@/lib/api";
 
 type DashboardView = "information" | "agent";
 
@@ -266,6 +267,7 @@ type AgentMessage = {
 
 function AgentView() {
   const [value, setValue] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<AgentMessage[]>([
     {
       role: "agent",
@@ -273,22 +275,49 @@ function AgentView() {
     },
   ]);
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     const message = value.trim();
-    if (!message) {
+    if (!message || isLoading) {
       return;
     }
 
-    setMessages((prev) => [
-      ...prev,
+    // Add the user's message to the chat immediately so they see it right away.
+    const updatedMessages: AgentMessage[] = [
+      ...messages,
       { role: "user", text: message },
-      {
-        role: "agent",
-        text: "Got it. I can help break this into clear next steps. Start by sharing your GPA, SAT status, and target intake.",
-      },
-    ]);
+    ];
+    setMessages(updatedMessages);
     setValue("");
+    setIsLoading(true);
+
+    try {
+      // Build the conversation history in the format the API expects.
+      // We skip the very first "agent" greeting (index 0) since it's not
+      // a real AI message — it was hardcoded. We only send real exchanges.
+      // "agent" maps to "assistant" because that's what the Anthropic API calls it.
+      const apiMessages = updatedMessages
+        .slice(1) // skip the initial greeting
+        .map((msg) => ({
+          role: msg.role === "user" ? "user" : "assistant" as "user" | "assistant",
+          content: msg.text,
+        }));
+
+      // Send to backend → backend calls Claude → returns the reply
+      const reply = await sendChatMessage(apiMessages);
+
+      // Add Claude's real response to the chat
+      setMessages((prev) => [...prev, { role: "agent", text: reply }]);
+    } catch {
+      // If something goes wrong (network error, bad API key, etc.), show an error message
+      setMessages((prev) => [
+        ...prev,
+        { role: "agent", text: "Sorry, I ran into an error. Please try again." },
+      ]);
+    } finally {
+      // Always turn off loading when done, whether it succeeded or failed
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -316,6 +345,12 @@ function AgentView() {
               {message.text}
             </div>
           ))}
+          {/* Show a "thinking" bubble while waiting for Claude's response */}
+          {isLoading && (
+            <div className="max-w-[85%] rounded-xl bg-white px-3 py-2 text-sm leading-6 text-neutral-400 dark:bg-neutral-900 dark:text-neutral-500">
+              ...
+            </div>
+          )}
         </div>
       </div>
 
@@ -367,8 +402,8 @@ function AgentView() {
             <span className="sr-only">Use Microphone</span>
           </Button>
 
-          <Button type="submit" size="sm" className="ml-auto gap-1.5 bg-black text-white hover:bg-neutral-800">
-            Send Message
+          <Button type="submit" size="sm" disabled={isLoading} className="ml-auto gap-1.5 bg-black text-white hover:bg-neutral-800 disabled:opacity-50">
+            {isLoading ? "Thinking..." : "Send Message"}
             <CornerDownLeft className="size-3.5" />
           </Button>
         </div>
