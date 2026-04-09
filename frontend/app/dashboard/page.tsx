@@ -1,17 +1,17 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Bot, CornerDownLeft, Info, LayoutDashboard, Mic, Paperclip } from "lucide-react";
+import { Bot, CornerDownLeft, Info, LayoutDashboard, Mic, Paperclip, User } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ChatInput } from "@/components/ui/chat-input";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
-import { sendChatMessage } from "@/lib/api";
+import { getProfile, sendChatMessage, StudentProfile, updateProfile } from "@/lib/api";
 
-type DashboardView = "information" | "agent";
+type DashboardView = "information" | "agent" | "profile";
 
 function DashboardLogo() {
   return (
@@ -268,12 +268,22 @@ type AgentMessage = {
 function AgentView() {
   const [value, setValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [profile, setProfile] = useState<Partial<StudentProfile>>({});
   const [messages, setMessages] = useState<AgentMessage[]>([
     {
       role: "agent",
       text: "Hi, I am your CollegeSodhpuch agent. Ask me about college list strategy, SAT prep, application deadlines, or visa steps.",
     },
   ]);
+
+  // Silently fetch the user's profile on load so we can personalize AI responses
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    if (!token) return;
+    getProfile(token)
+      .then((data) => setProfile(data))
+      .catch(() => {});
+  }, []);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -282,7 +292,6 @@ function AgentView() {
       return;
     }
 
-    // Add the user's message to the chat immediately so they see it right away.
     const updatedMessages: AgentMessage[] = [
       ...messages,
       { role: "user", text: message },
@@ -292,30 +301,41 @@ function AgentView() {
     setIsLoading(true);
 
     try {
-      // Build the conversation history in the format the API expects.
-      // We skip the very first "agent" greeting (index 0) since it's not
-      // a real AI message — it was hardcoded. We only send real exchanges.
-      // "agent" maps to "assistant" because that's what the Anthropic API calls it.
+      // Build a profile context string to prepend to the conversation.
+      // This tells the AI who the student is so responses are personalized.
+      // Only include fields that have been filled in.
+      const profileLines: string[] = [];
+      if (profile.full_name) profileLines.push(`Student name: ${profile.full_name}`);
+      if (profile.gpa) profileLines.push(`GPA: ${profile.gpa}`);
+      if (profile.sat_score) profileLines.push(`SAT score: ${profile.sat_score}`);
+      if (profile.intended_major) profileLines.push(`Intended major: ${profile.intended_major}`);
+      if (profile.target_schools) profileLines.push(`Target schools: ${profile.target_schools}`);
+      if (profile.country_of_origin) profileLines.push(`Country: ${profile.country_of_origin}`);
+
+      const profileContext = profileLines.length > 0
+        ? `[Student profile: ${profileLines.join(", ")}]\n`
+        : "";
+
+      // Build the conversation history. If we have profile data, inject it
+      // as context at the start of the first user message so the AI knows
+      // who it's talking to without the user having to repeat themselves.
       const apiMessages = updatedMessages
-        .slice(1) // skip the initial greeting
-        .map((msg) => ({
+        .slice(1)
+        .map((msg, index) => ({
           role: msg.role === "user" ? "user" : "assistant" as "user" | "assistant",
-          content: msg.text,
+          content: index === 0 && msg.role === "user" && profileContext
+            ? profileContext + msg.text
+            : msg.text,
         }));
 
-      // Send to backend → backend calls Claude → returns the reply
       const reply = await sendChatMessage(apiMessages);
-
-      // Add Claude's real response to the chat
       setMessages((prev) => [...prev, { role: "agent", text: reply }]);
     } catch {
-      // If something goes wrong (network error, bad API key, etc.), show an error message
       setMessages((prev) => [
         ...prev,
         { role: "agent", text: "Sorry, I ran into an error. Please try again." },
       ]);
     } finally {
-      // Always turn off loading when done, whether it succeeded or failed
       setIsLoading(false);
     }
   };
@@ -412,13 +432,157 @@ function AgentView() {
   );
 }
 
+function ProfileView() {
+  const [profile, setProfile] = useState<Partial<StudentProfile>>({});
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Load existing profile when the component mounts
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    if (!token) return;
+    getProfile(token)
+      .then((data) => setProfile(data))
+      .catch(() => {}); // silently ignore if profile fetch fails
+  }, []);
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
+    setSaved(false);
+
+    const token = localStorage.getItem("access_token");
+    if (!token) return;
+
+    try {
+      const updated = await updateProfile(token, {
+        gpa: profile.gpa ?? null,
+        sat_score: profile.sat_score ?? null,
+        intended_major: profile.intended_major ?? null,
+        target_schools: profile.target_schools ?? null,
+        country_of_origin: profile.country_of_origin ?? null,
+      });
+      setProfile(updated);
+      setSaved(true);
+      // Hide the success message after 3 seconds
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save profile");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
+      <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+        Your Student Profile
+      </h2>
+      <p className="mt-2 text-sm leading-7 text-neutral-600 dark:text-neutral-300">
+        Fill in your academic details. The AI agent will use this information to give you
+        personalized advice on college selection, SAT prep, and visa preparation.
+      </p>
+
+      <form onSubmit={handleSave} className="mt-6 grid gap-5">
+        <div className="grid gap-1.5">
+          <label className="text-sm font-medium text-neutral-700 dark:text-neutral-200">
+            GPA (out of 4.0)
+          </label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            max="4"
+            placeholder="e.g. 3.7"
+            value={profile.gpa ?? ""}
+            onChange={(e) => setProfile((p) => ({ ...p, gpa: e.target.value ? parseFloat(e.target.value) : null }))}
+            className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100"
+          />
+        </div>
+
+        <div className="grid gap-1.5">
+          <label className="text-sm font-medium text-neutral-700 dark:text-neutral-200">
+            SAT Score (400–1600)
+          </label>
+          <input
+            type="number"
+            min="400"
+            max="1600"
+            placeholder="e.g. 1350"
+            value={profile.sat_score ?? ""}
+            onChange={(e) => setProfile((p) => ({ ...p, sat_score: e.target.value ? parseInt(e.target.value) : null }))}
+            className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100"
+          />
+        </div>
+
+        <div className="grid gap-1.5">
+          <label className="text-sm font-medium text-neutral-700 dark:text-neutral-200">
+            Intended Major
+          </label>
+          <input
+            type="text"
+            placeholder="e.g. Computer Science"
+            value={profile.intended_major ?? ""}
+            onChange={(e) => setProfile((p) => ({ ...p, intended_major: e.target.value }))}
+            className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100"
+          />
+        </div>
+
+        <div className="grid gap-1.5">
+          <label className="text-sm font-medium text-neutral-700 dark:text-neutral-200">
+            Target Schools
+          </label>
+          <textarea
+            rows={3}
+            placeholder="e.g. MIT, University of Michigan, Arizona State University"
+            value={profile.target_schools ?? ""}
+            onChange={(e) => setProfile((p) => ({ ...p, target_schools: e.target.value }))}
+            className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100"
+          />
+        </div>
+
+        <div className="grid gap-1.5">
+          <label className="text-sm font-medium text-neutral-700 dark:text-neutral-200">
+            Country of Origin
+          </label>
+          <input
+            type="text"
+            placeholder="e.g. Nepal"
+            value={profile.country_of_origin ?? ""}
+            onChange={(e) => setProfile((p) => ({ ...p, country_of_origin: e.target.value }))}
+            className="rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100"
+          />
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Button type="submit" disabled={saving} className="bg-black text-white hover:bg-neutral-800 disabled:opacity-50">
+            {saving ? "Saving..." : "Save Profile"}
+          </Button>
+          {saved && (
+            <span className="text-sm text-green-600 dark:text-green-400">
+              Profile saved successfully.
+            </span>
+          )}
+          {error && (
+            <span className="text-sm text-red-600 dark:text-red-400">{error}</span>
+          )}
+        </div>
+      </form>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const [open, setOpen] = useState(false);
   const searchParams = useSearchParams();
 
   const activeView: DashboardView = useMemo(() => {
     const view = searchParams.get("view");
-    return view === "agent" ? "agent" : "information";
+    if (view === "agent") return "agent";
+    if (view === "profile") return "profile";
+    return "information";
   }, [searchParams]);
 
   const links = [
@@ -431,6 +595,11 @@ export default function DashboardPage() {
       label: "Agent",
       href: "/dashboard?view=agent",
       icon: <Bot className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />,
+    },
+    {
+      label: "Profile",
+      href: "/dashboard?view=profile",
+      icon: <User className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />,
     },
   ];
 
@@ -481,16 +650,20 @@ export default function DashboardPage() {
         >
           <div className="mb-5">
             <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
-              {activeView === "information" ? "Application Information Hub" : "AI Agent Assistant"}
+              {activeView === "information" && "Application Information Hub"}
+              {activeView === "agent" && "AI Agent Assistant"}
+              {activeView === "profile" && "Your Profile"}
             </h1>
             <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-300">
-              {activeView === "information"
-                ? "Read focused guides and practical advice for college applications, exam planning, and visa preparation."
-                : "Ask targeted questions and get structured guidance for your next application move."}
+              {activeView === "information" && "Read focused guides and practical advice for college applications, exam planning, and visa preparation."}
+              {activeView === "agent" && "Ask targeted questions and get structured guidance for your next application move."}
+              {activeView === "profile" && "Save your academic details so the AI agent can give you personalized advice."}
             </p>
           </div>
 
-          {activeView === "information" ? <InformationView /> : <AgentView />}
+          {activeView === "information" && <InformationView />}
+          {activeView === "agent" && <AgentView />}
+          {activeView === "profile" && <ProfileView />}
         </motion.div>
       </div>
     </div>

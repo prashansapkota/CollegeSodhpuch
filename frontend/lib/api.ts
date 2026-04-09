@@ -14,6 +14,19 @@ export type UserProfile = {
   created_at: string;
 };
 
+export async function register(email: string, fullName: string, password: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, full_name: fullName, password }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || "Registration failed");
+  }
+}
+
 export async function login(email: string, password: string): Promise<LoginResponse> {
   const body = new URLSearchParams();
   body.append("username", email);
@@ -57,6 +70,61 @@ export async function sendChatMessage(messages: ChatMessage[]): Promise<string> 
 
   const data = await response.json();
   return data.reply as string;
+}
+
+// The student's academic profile — stored in the database, used to personalize AI responses
+export type StudentProfile = {
+  id: number;
+  email: string;
+  full_name: string;
+  gpa: number | null;
+  sat_score: number | null;
+  intended_major: string | null;
+  target_schools: string | null;
+  country_of_origin: string | null;
+};
+
+export type ProfileUpdatePayload = {
+  gpa?: number | null;
+  sat_score?: number | null;
+  intended_major?: string | null;
+  target_schools?: string | null;
+  country_of_origin?: string | null;
+};
+
+// Fetches the current user's saved profile to pre-populate the profile form
+export async function getProfile(token: string): Promise<StudentProfile> {
+  const response = await fetch(`${API_BASE_URL}/users/profile`, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || "Failed to fetch profile");
+  }
+
+  return (await response.json()) as StudentProfile;
+}
+
+// Saves updated profile fields to the database
+export async function updateProfile(token: string, data: ProfileUpdatePayload): Promise<StudentProfile> {
+  const response = await fetch(`${API_BASE_URL}/users/profile`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || "Failed to update profile");
+  }
+
+  return (await response.json()) as StudentProfile;
 }
 
 export async function getCurrentUser(token: string): Promise<UserProfile> {

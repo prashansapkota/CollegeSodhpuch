@@ -7,7 +7,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { login } from "@/lib/api";
+import { register, login } from "@/lib/api";
 
 // --- Animated character helpers ---
 
@@ -203,10 +203,11 @@ function Characters({ isTyping, showPassword, password }: { isTyping: boolean; s
   );
 }
 
-// --- Main Login Page ---
+// --- Main Register Page ---
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter();
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -219,11 +220,12 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     try {
+      await register(email, fullName, password);
       const result = await login(email, password);
       localStorage.setItem("access_token", result.access_token);
       router.push("/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      setError(err instanceof Error ? err.message : "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -247,19 +249,27 @@ export default function LoginPage() {
         <p className="text-white/60 text-sm">Helping Nepali students navigate U.S. college applications.</p>
       </div>
 
-      {/* Right — login form */}
+      {/* Right — register form */}
       <div className="flex items-center justify-center p-8 bg-white dark:bg-neutral-950">
         <div className="w-full max-w-[400px]">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">Welcome back</h1>
-            <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Sign in to your account</p>
+            <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">Create your account</h1>
+            <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Free to use — start today</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-1.5">
+              <Label htmlFor="fullName">Full Name</Label>
+              <Input id="fullName" type="text" placeholder="Prashansa Sapkota"
+                value={fullName} onChange={(e) => setFullName(e.target.value)}
+                onFocus={() => setIsTyping(true)} onBlur={() => setIsTyping(false)}
+                required className="h-12" />
+            </div>
+
+            <div className="space-y-1.5">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="you@example.com" value={email}
-                onChange={(e) => setEmail(e.target.value)}
+              <Input id="email" type="email" placeholder="you@example.com"
+                value={email} onChange={(e) => setEmail(e.target.value)}
                 onFocus={() => setIsTyping(true)} onBlur={() => setIsTyping(false)}
                 required className="h-12" />
             </div>
@@ -282,14 +292,14 @@ export default function LoginPage() {
             )}
 
             <Button type="submit" disabled={loading} className="w-full h-12 text-base">
-              {loading ? "Signing in..." : "Sign in"}
+              {loading ? "Creating account..." : "Create account"}
             </Button>
           </form>
 
           <p className="mt-6 text-center text-sm text-neutral-500">
-            Don&apos;t have an account?{" "}
-            <Link href="/register" className="font-medium text-neutral-900 underline underline-offset-4 dark:text-neutral-100">
-              Create one
+            Already have an account?{" "}
+            <Link href="/login" className="font-medium text-neutral-900 underline underline-offset-4 dark:text-neutral-100">
+              Sign in
             </Link>
           </p>
         </div>
