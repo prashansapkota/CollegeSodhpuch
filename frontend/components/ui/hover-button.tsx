@@ -56,6 +56,8 @@ const HoverButton = React.forwardRef<HTMLButtonElement, HoverButtonProps>(
       })
     }, [circles])
 
+    React.useImperativeHandle(ref, () => buttonRef.current as HTMLButtonElement)
+
     return (
       <button
         ref={buttonRef}

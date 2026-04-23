@@ -1,32 +1,18 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Bot, CornerDownLeft, Info, LayoutDashboard, Mic, Paperclip, User } from "lucide-react";
+import { CornerDownLeft, Mic, Paperclip } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { motion } from "framer-motion";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ChatInput } from "@/components/ui/chat-input";
-import Link from "next/link";
 import { AppSidebar } from "@/components/ui/sidebar";
-import { getProfile, getCurrentUser, sendChatMessage, StudentProfile, UserProfile, updateProfile } from "@/lib/api";
+import { getProfile, sendChatMessage, StudentProfile, updateProfile } from "@/lib/api";
 
 type DashboardView = "information" | "agent" | "profile";
-
-function DashboardLogo() {
-  return (
-    <div className="flex items-center gap-2 py-1">
-      <div className="h-5 w-6 flex-shrink-0 rounded-bl-sm rounded-br-lg rounded-tl-lg rounded-tr-sm bg-black dark:bg-white" />
-      <span className="text-sm font-medium text-black dark:text-white">CollegeSodhpuch</span>
-    </div>
-  );
-}
-
-function DashboardLogoIcon() {
-  return <div className="h-5 w-6 flex-shrink-0 rounded-bl-sm rounded-br-lg rounded-tl-lg rounded-tr-sm bg-black dark:bg-white" />;
-}
 
 function InformationView() {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({
@@ -601,7 +587,7 @@ function ProfileView() {
 }
 
 
-export default function DashboardPage() {
+function DashboardPageContent() {
   const searchParams = useSearchParams();
 
   const activeView: DashboardView = useMemo(() => {
@@ -643,5 +629,13 @@ export default function DashboardPage() {
         </motion.div>
       </main>
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div className="p-4 text-sm text-neutral-500">Loading dashboard...</div>}>
+      <DashboardPageContent />
+    </Suspense>
   );
 }

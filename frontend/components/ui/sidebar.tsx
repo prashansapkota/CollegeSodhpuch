@@ -213,7 +213,7 @@ export function AppSidebar() {
 
 // Legacy exports kept for any remaining imports
 export { AppSidebar as Sidebar };
-export const SidebarProvider = ({ children, defaultOpen: _d }: { children: React.ReactNode; defaultOpen?: boolean }) => <>{children}</>;
+export const SidebarProvider = ({ children }: { children: React.ReactNode; defaultOpen?: boolean }) => <>{children}</>;
 export const SidebarBody = ({ children, className }: { children: React.ReactNode; className?: string }) => <div className={className}>{children}</div>;
 export const SidebarContent = ({ children, className }: { children: React.ReactNode; className?: string }) => <div className={className}>{children}</div>;
 export const SidebarHeader = ({ children, className }: { children: React.ReactNode; className?: string }) => <div className={className}>{children}</div>;
@@ -222,7 +222,7 @@ export const SidebarGroup = ({ children, className }: { children: React.ReactNod
 export const SidebarGroupContent = ({ children }: { children: React.ReactNode }) => <div>{children}</div>;
 export const SidebarMenu = ({ children }: { children: React.ReactNode }) => <ul>{children}</ul>;
 export const SidebarMenuItem = ({ children }: { children: React.ReactNode }) => <li>{children}</li>;
-export const SidebarMenuButton = ({ children, asChild, isActive: _a, tooltip: _t, size: _s, className, ...props }: { children: React.ReactNode; asChild?: boolean; isActive?: boolean; tooltip?: string; size?: string; className?: string } & React.ButtonHTMLAttributes<HTMLButtonElement>) => {
+export const SidebarMenuButton = ({ children, asChild, className, ...props }: { children: React.ReactNode; asChild?: boolean; isActive?: boolean; tooltip?: string; size?: string; className?: string } & React.ButtonHTMLAttributes<HTMLButtonElement>) => {
   if (asChild) {
     const child = React.Children.only(children) as React.ReactElement<React.HTMLAttributes<HTMLElement>>;
     return React.cloneElement(child, { className: cn(child.props.className, className) });
