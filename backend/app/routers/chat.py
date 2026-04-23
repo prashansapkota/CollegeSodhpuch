@@ -1,11 +1,12 @@
+import logging
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
 from groq import Groq
-import traceback
+from pydantic import BaseModel
 
 from app.config import settings
 
 router = APIRouter()
+logger = logging.getLogger("app.routers.chat")
 
 SYSTEM_PROMPT = """You are CollegeSodhpuch, a helpful and knowledgeable college application advisor
 specializing in helping students from Nepal apply to universities in the United States.
@@ -43,9 +44,8 @@ class ChatResponse(BaseModel):
 @router.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     try:
-        print(">>> GROQ KEY:", settings.groq_api_key[:10] if settings.groq_api_key else "EMPTY")
-
         if not settings.groq_api_key:
+            logger.error("chat_rejected reason=missing_groq_key")
             raise HTTPException(
                 status_code=500,
                 detail="GROQ_API_KEY is not configured on the server."
@@ -62,7 +62,12 @@ async def chat(request: ChatRequest):
                 "content": msg.content,
             })
 
-        print(">>> SENDING MESSAGE:", request.messages[-1].content[:50])
+        latest_preview = request.messages[-1].content[:80] if request.messages else ""
+        logger.info(
+            "chat_request_received messages_count=%s latest_preview=%s",
+            len(request.messages),
+            latest_preview,
+        )
 
         # Call Groq with llama-3.3-70b — fast, free, and very capable
         response = client.chat.completions.create(
@@ -72,12 +77,12 @@ async def chat(request: ChatRequest):
         )
 
         reply_text = response.choices[0].message.content
-        print(">>> GOT RESPONSE:", reply_text[:80])
+        logger.info("chat_response_success reply_preview=%s", (reply_text or "")[:120])
 
         return ChatResponse(reply=reply_text)
 
     except HTTPException:
         raise
     except Exception as e:
-        traceback.print_exc()
+        logger.exception("chat_request_failed error=%s", str(e))
         raise HTTPException(status_code=500, detail=str(e))
