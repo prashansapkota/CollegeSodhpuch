@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Bot, CornerDownLeft, Info, LayoutDashboard, Mic, Paperclip, User } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import { motion } from "framer-motion";
 
 import { cn } from "@/lib/utils";
@@ -269,12 +270,17 @@ function AgentView() {
   const [value, setValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [profile, setProfile] = useState<Partial<StudentProfile>>({});
+  const bottomRef = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState<AgentMessage[]>([
     {
       role: "agent",
       text: "Hi, I am your CollegeSodhpuch agent. Ask me about college list strategy, SAT prep, application deadlines, or visa steps.",
     },
   ]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isLoading]);
 
   // Silently fetch the user's profile on load so we can personalize AI responses
   useEffect(() => {
@@ -351,7 +357,7 @@ function AgentView() {
       </p>
 
       <div className="mt-5 rounded-lg border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-700 dark:bg-neutral-800/70">
-        <div className="max-h-[280px] space-y-3 overflow-y-auto pr-1">
+        <div className="max-h-[480px] space-y-3 overflow-y-auto pr-1">
           {messages.map((message, index) => (
             <div
               key={`${message.role}-${index}`}
@@ -362,15 +368,34 @@ function AgentView() {
                   : "bg-white text-neutral-700 dark:bg-neutral-900 dark:text-neutral-200",
               )}
             >
-              {message.text}
+              {message.role === "agent" ? (
+                <ReactMarkdown
+                  components={{
+                    p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                    ul: ({ children }) => <ul className="mb-2 list-disc pl-4 space-y-1">{children}</ul>,
+                    ol: ({ children }) => <ol className="mb-2 list-decimal pl-4 space-y-1">{children}</ol>,
+                    li: ({ children }) => <li className="leading-6">{children}</li>,
+                    strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                    h1: ({ children }) => <h1 className="text-base font-bold mb-1 mt-2">{children}</h1>,
+                    h2: ({ children }) => <h2 className="text-sm font-bold mb-1 mt-2">{children}</h2>,
+                    h3: ({ children }) => <h3 className="text-sm font-semibold mb-1 mt-2">{children}</h3>,
+                    code: ({ children }) => <code className="rounded bg-neutral-100 px-1 font-mono text-xs dark:bg-neutral-800">{children}</code>,
+                    hr: () => <hr className="my-2 border-neutral-200 dark:border-neutral-700" />,
+                  }}
+                >
+                  {message.text}
+                </ReactMarkdown>
+              ) : (
+                message.text
+              )}
             </div>
           ))}
-          {/* Show a "thinking" bubble while waiting for Claude's response */}
           {isLoading && (
             <div className="max-w-[85%] rounded-xl bg-white px-3 py-2 text-sm leading-6 text-neutral-400 dark:bg-neutral-900 dark:text-neutral-500">
-              ...
+              Thinking...
             </div>
           )}
+          <div ref={bottomRef} />
         </div>
       </div>
 

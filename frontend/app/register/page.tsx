@@ -254,13 +254,13 @@ export default function RegisterPage() {
         <div className="w-full max-w-[400px]">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">Create your account</h1>
-            <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Free to use — start today</p>
+            <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Free to use, start today</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-1.5">
               <Label htmlFor="fullName">Full Name</Label>
-              <Input id="fullName" type="text" placeholder="Prashansa Sapkota"
+              <Input id="fullName" type="text" placeholder="Prashan Sapkota"
                 value={fullName} onChange={(e) => setFullName(e.target.value)}
                 onFocus={() => setIsTyping(true)} onBlur={() => setIsTyping(false)}
                 required className="h-12" />
