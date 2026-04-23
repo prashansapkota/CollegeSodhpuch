@@ -9,8 +9,9 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ChatInput } from "@/components/ui/chat-input";
-import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
-import { getProfile, sendChatMessage, StudentProfile, updateProfile } from "@/lib/api";
+import Link from "next/link";
+import { AppSidebar } from "@/components/ui/sidebar";
+import { getProfile, getCurrentUser, sendChatMessage, StudentProfile, UserProfile, updateProfile } from "@/lib/api";
 
 type DashboardView = "information" | "agent" | "profile";
 
@@ -599,8 +600,8 @@ function ProfileView() {
   );
 }
 
+
 export default function DashboardPage() {
-  const [open, setOpen] = useState(false);
   const searchParams = useSearchParams();
 
   const activeView: DashboardView = useMemo(() => {
@@ -610,68 +611,18 @@ export default function DashboardPage() {
     return "information";
   }, [searchParams]);
 
-  const links = [
-    {
-      label: "Information",
-      href: "/dashboard?view=information",
-      icon: <Info className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />,
-    },
-    {
-      label: "Agent",
-      href: "/dashboard?view=agent",
-      icon: <Bot className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />,
-    },
-    {
-      label: "Profile",
-      href: "/dashboard?view=profile",
-      icon: <User className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />,
-    },
-  ];
-
   return (
-    <div
-      className={cn(
-        "dashboard-fullbleed flex w-full flex-col overflow-hidden border-y border-neutral-200 bg-gray-100 shadow-sm md:flex-row dark:border-neutral-700 dark:bg-neutral-800",
-      )}
-    >
-      <Sidebar open={open} setOpen={setOpen}>
-        <SidebarBody className="justify-between gap-8">
-          <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
-            {open ? <DashboardLogo /> : <DashboardLogoIcon />}
-            <div className="mt-8 flex flex-col gap-2">
-              <SidebarLink
-                link={{
-                  label: "Dashboard",
-                  href: "/dashboard?view=information",
-                  icon: (
-                    <LayoutDashboard className="h-5 w-5 flex-shrink-0 text-neutral-700 dark:text-neutral-200" />
-                  ),
-                }}
-              />
-              {links.map((link) => (
-                <SidebarLink
-                  key={link.label}
-                  link={link}
-                  className={cn(
-                    activeView === link.label.toLowerCase()
-                      ? "rounded-md bg-neutral-200/80 px-2 dark:bg-neutral-700/70"
-                      : "",
-                  )}
-                />
-              ))}
-            </div>
-          </div>
+    <div className="dashboard-fullbleed flex w-full">
+      <AppSidebar />
 
-        </SidebarBody>
-      </Sidebar>
-
-      <div className="flex flex-1">
+      {/* pl-[3.05rem] matches the collapsed sidebar width so content is never hidden */}
+      <main className="flex flex-1 flex-col overflow-hidden pl-[3.05rem]">
         <motion.div
           key={activeView}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2 }}
-          className="h-full w-full overflow-y-auto rounded-tl-2xl border border-neutral-200 bg-white p-4 md:p-8 dark:border-neutral-700 dark:bg-neutral-900"
+          className="flex-1 overflow-y-auto bg-white p-4 md:p-8 dark:bg-neutral-900"
         >
           <div className="mb-5">
             <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
@@ -690,7 +641,7 @@ export default function DashboardPage() {
           {activeView === "agent" && <AgentView />}
           {activeView === "profile" && <ProfileView />}
         </motion.div>
-      </div>
+      </main>
     </div>
   );
 }

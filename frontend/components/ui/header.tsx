@@ -1,14 +1,27 @@
 'use client';
 import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button, buttonVariants } from '@/components/ui/button';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { MenuToggleIcon } from '@/components/ui/menu-toggle-icon';
 import { useScroll } from '@/components/ui/use-scroll';
+import { getCurrentUser, UserProfile } from '@/lib/api';
+import { LogOut, User } from 'lucide-react';
 
 export function SiteHeader() {
 	const [open, setOpen] = React.useState(false);
+	const [user, setUser] = React.useState<UserProfile | null>(null);
 	const scrolled = useScroll(10);
+	const router = useRouter();
 
 	const links = [
 		{ label: 'Home', href: '/' },
@@ -17,9 +30,25 @@ export function SiteHeader() {
 	];
 
 	React.useEffect(() => {
+		const token = localStorage.getItem('access_token');
+		if (!token) return;
+		getCurrentUser(token).then(setUser).catch(() => {});
+	}, []);
+
+	React.useEffect(() => {
 		document.body.style.overflow = open ? 'hidden' : '';
 		return () => { document.body.style.overflow = ''; };
 	}, [open]);
+
+	const handleSignOut = () => {
+		localStorage.removeItem('access_token');
+		setUser(null);
+		router.push('/login');
+	};
+
+	const initials = user?.full_name
+		? user.full_name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
+		: '?';
 
 	return (
 		<header
@@ -50,12 +79,47 @@ export function SiteHeader() {
 							{link.label}
 						</Link>
 					))}
-					<Button variant="outline" asChild>
-						<Link href="/login">Sign In</Link>
-					</Button>
-					<Button asChild>
-						<Link href="/register">Get Started</Link>
-					</Button>
+					{user ? (
+						<DropdownMenu modal={false}>
+							<DropdownMenuTrigger asChild>
+								<Button variant="ghost" size="sm" className="flex items-center gap-2 px-2">
+									<Avatar className="size-8 rounded-full ring-2 ring-violet-200 dark:ring-violet-800">
+										<AvatarFallback className="text-xs font-bold bg-violet-600 text-white rounded-full">
+											{initials}
+										</AvatarFallback>
+									</Avatar>
+									<span className="text-sm font-medium max-w-[120px] truncate">{user.full_name}</span>
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end" className="w-48">
+								<div className="px-2 py-1.5">
+									<p className="text-sm font-medium truncate">{user.full_name}</p>
+									<p className="text-xs text-muted-foreground truncate">{user.email}</p>
+								</div>
+								<DropdownMenuSeparator />
+								<DropdownMenuItem asChild className="flex items-center gap-2 cursor-pointer">
+									<Link href="/dashboard?view=profile">
+										<User className="h-4 w-4" /> Profile
+									</Link>
+								</DropdownMenuItem>
+								<DropdownMenuItem
+									className="flex items-center gap-2 cursor-pointer text-red-600 focus:text-red-600"
+									onClick={handleSignOut}
+								>
+									<LogOut className="h-4 w-4" /> Sign out
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
+					) : (
+						<>
+							<Button variant="outline" asChild>
+								<Link href="/login">Sign In</Link>
+							</Button>
+							<Button asChild>
+								<Link href="/register">Get Started</Link>
+							</Button>
+						</>
+					)}
 				</div>
 
 				{/* Mobile menu toggle */}
@@ -91,12 +155,25 @@ export function SiteHeader() {
 						))}
 					</div>
 					<div className="flex flex-col gap-2">
-						<Button variant="outline" className="w-full" asChild>
-							<Link href="/login" onClick={() => setOpen(false)}>Sign In</Link>
-						</Button>
-						<Button className="w-full" asChild>
-							<Link href="/register" onClick={() => setOpen(false)}>Get Started</Link>
-						</Button>
+						{user ? (
+							<>
+								<Button variant="outline" className="w-full" asChild>
+									<Link href="/dashboard?view=profile" onClick={() => setOpen(false)}>Profile</Link>
+								</Button>
+								<Button variant="destructive" className="w-full" onClick={handleSignOut}>
+									Sign Out
+								</Button>
+							</>
+						) : (
+							<>
+								<Button variant="outline" className="w-full" asChild>
+									<Link href="/login" onClick={() => setOpen(false)}>Sign In</Link>
+								</Button>
+								<Button className="w-full" asChild>
+									<Link href="/register" onClick={() => setOpen(false)}>Get Started</Link>
+								</Button>
+							</>
+						)}
 					</div>
 				</div>
 			</div>
